@@ -1,0 +1,2098 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evita - Análise de Email</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">   
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(180deg, 
+                #90A4AE 0%, 
+                #78909C 20%, 
+                #607D8B 35%, 
+                #546E7A 50%, 
+                #455A64 65%, 
+                #37474F 80%, 
+                #2C3E50 90%, 
+                #1a1a2e 100%
+            );
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            color: #F8FAFC;
+            position: relative;
+            overflow-x: hidden;
+            font-size: 1rem;
+            transition: font-size 0.3s ease;
+        }
+
+        /* Elementos gráficos simplificados */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(167, 197, 235, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(168, 213, 186, 0.04) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .topo-quadrado {
+            width: 100%;
+            height: 70px;
+            background: rgba(44, 62, 80, 0.9);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #F8FAFC;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            letter-spacing: 3px;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: #F8FAFC;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            position: absolute;
+            right: 20px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(167, 197, 235, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(167, 197, 235, 0.3);
+        }
+
+        .botao-voltar {
+            position: fixed;
+            top: 17px;
+            left: 25px;
+            z-index: 1001;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(44, 62, 80, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .botao-voltar:hover {
+            background: rgba(167, 197, 235, 0.2);
+            transform: translateX(-3px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(167, 197, 235, 0.3);
+        }
+
+        .botao-voltar svg {
+            width: 20px;
+            height: 20px;
+            stroke: #F8FAFC;
+            stroke-width: 2.5;
+        }
+
+        /* Flash Messages */
+        .flash-message {
+            position: fixed;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1002;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 500;
+            font-size: 1rem;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: flashSlideIn 0.5s ease-out;
+            max-width: 90%;
+            word-wrap: break-word;
+        }
+
+        .flash-success {
+            background: rgba(168, 213, 186, 0.9);
+            color: #1a1a2e;
+            border-color: rgba(168, 213, 186, 0.3);
+        }
+
+        .flash-error {
+            background: rgba(239, 68, 68, 0.9);
+            color: #F8FAFC;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .flash-warning {
+            background: rgba(245, 158, 11, 0.9);
+            color: #1a1a2e;
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .flash-info {
+            background: rgba(59, 130, 246, 0.9);
+            color: #F8FAFC;
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        @keyframes flashSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* Auto-hide flash messages */
+        .flash-message {
+            animation: flashSlideIn 0.5s ease-out, flashFadeOut 0.5s ease-in 4.5s forwards;
+        }
+
+        @keyframes flashFadeOut {
+            to {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+        }
+
+        /* Alertas */
+        .alert {
+            padding: 16px 24px;
+            margin: 15px auto;
+            border-radius: 16px;
+            font-weight: 600;
+            text-align: center;
+            max-width: 600px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 10;
+        }
+
+        .alert-success {
+            background: rgba(168, 213, 186, 0.9);
+            color: #F8FAFC;
+            border-color: rgba(168, 213, 186, 0.3);
+        }
+
+        .alert-error {
+            background: rgba(231, 76, 60, 0.9);
+            color: #F8FAFC;
+            border-color: rgba(231, 76, 60, 0.3);
+        }
+
+        .alert-warning {
+            background: rgba(255, 152, 0, 0.9);
+            color: #F8FAFC;
+            border-color: rgba(255, 152, 0, 0.3);
+        }
+
+        .alert-info {
+            background: rgba(167, 197, 235, 0.9);
+            color: #F8FAFC;
+            border-color: rgba(167, 197, 235, 0.3);
+        }
+
+        .login-section {
+            background: rgba(44, 62, 80, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 40px;
+            margin: 20px auto;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            position: relative;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .login-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(167, 197, 235, 0.2);
+        }
+
+        .login-button {
+            background: linear-gradient(135deg, #A7C5EB, #A8D5BA);
+            color: #2C3E50;
+            border: none;
+            padding: 18px 36px;
+            border-radius: 999px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 15px 0;
+            font-family: 'Space Grotesk', sans-serif;
+            box-shadow: 0 4px 15px rgba(167, 197, 235, 0.3);
+        }
+
+        .login-button:hover {
+            background: linear-gradient(135deg, #A8D5BA, #A7C5EB);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(167, 197, 235, 0.4);
+        }
+
+        /* NOVA SEÇÃO DE LOADING */
+        .loading-section {
+            background: rgba(44, 62, 80, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 60px 40px;
+            margin: 20px auto;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            position: relative;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .loading-spinner {
+            margin-bottom: 30px;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(167, 197, 235, 0.3);
+            border-top: 4px solid #A7C5EB;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-section h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #F8FAFC;
+        }
+
+        .loading-section p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            color: #F8FAFC;
+            opacity: 0.9;
+        }
+
+        .loading-progress {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #A7C5EB, #A8D5BA);
+            border-radius: 4px;
+            animation: progress 3s ease-in-out infinite;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+            color: #F8FAFC;
+            opacity: 0.8;
+            margin: 0;
+        }
+
+        .progress-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .step {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            background: rgba(168, 213, 186, 0.3);
+            opacity: 1;
+        }
+
+        .step.loading {
+            background: rgba(167, 197, 235, 0.3);
+            opacity: 1;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .estilo-h1 {
+            color: #F8FAFC;
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .insiratexto-h1 {
+            color: #F8FAFC;
+            text-align: center;
+            font-size: 3em;
+            font-weight: 700;
+            margin-top: 100px;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .insiratexto-h1::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, #A7C5EB, #A8D5BA);
+            border-radius: 2px;
+        }
+
+        input[type="text"], input[type="date"] {
+            width: 100%;
+            max-width: 500px;
+            padding: 18px 28px;
+            border-radius: 999px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            color: #F8FAFC;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 18px;
+            font-weight: 500;
+            background: rgba(44, 62, 80, 0.5);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type="text"]:focus, input[type="date"]:focus {
+            outline: none;
+            border-color: #A7C5EB;
+            box-shadow: 0 0 0 4px rgba(167, 197, 235, 0.2);
+            background: rgba(44, 62, 80, 0.7);
+        }
+
+        input[type="text"]::placeholder {
+            color: rgba(248, 250, 252, 0.6);
+        }
+
+        .selectchange {
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 20px;
+            background: rgba(44, 62, 80, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            font-size: 20px;
+            font-weight: 600;
+            font-family: 'Space Grotesk', sans-serif;
+            color: #F8FAFC;
+            text-align: center;
+            padding: 18px 28px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .selectchange:focus {
+            outline: none;
+            border-color: #A7C5EB;
+            box-shadow: 0 0 0 4px rgba(167, 197, 235, 0.2);
+        }
+
+        .optionchange {
+            background: rgba(44, 62, 80, 0.9);
+            color: #F8FAFC;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        button {
+            background: linear-gradient(135deg, #A7C5EB, #A8D5BA);
+            color: #2C3E50;
+            border: none;
+            font-family: 'Space Grotesk', sans-serif;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            padding: 16px 32px;
+            margin: 8px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(167, 197, 235, 0.3);
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #A8D5BA, #A7C5EB);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(167, 197, 235, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .CUSTOMBUTTON {
+            width: 100%;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 16px 24px;
+        }
+
+        .botaomodificadinho {
+            width: 250px;
+            margin: 15px auto;
+            display: block;
+        }
+
+        .buttoneach {
+            width: 100%;
+            background: rgba(44, 62, 80, 0.5);
+            color: #F8FAFC;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'Space Grotesk', sans-serif;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 20px;
+            margin: 8px 0;
+            transition: all 0.3s ease;
+            text-align: left;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .buttoneach:hover {
+            background: rgba(167, 197, 235, 0.3);
+            color: #F8FAFC;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(167, 197, 235, 0.3);
+        }
+
+        .buttoneach:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .CUSTOMFONTFORBUTTON {
+            font-size: 14px;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        .div1, .div2, .div3 {
+            background: rgba(44, 62, 80, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: #F8FAFC;
+            text-align: center;
+            border-radius: 16px;
+            font-family: 'Space Grotesk', sans-serif;
+            padding: 30px 25px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .div1:hover, .div2:hover, .div3:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(167, 197, 235, 0.2);
+        }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #A7C5EB, #A8D5BA);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            margin: 0 auto 20px auto;
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 15px rgba(167, 197, 235, 0.3);
+        }
+
+        .div1:hover .card-icon, .div2:hover .card-icon, .div3:hover .card-icon {
+            transform: scale(1.1);
+        }
+
+        .div4 {
+            color: #F8FAFC;
+            width: 100%;
+            text-align: center;
+            font-family: 'Space Grotesk', sans-serif;
+            padding: 30px;
+            margin: 20px 0;
+            background: rgba(44, 62, 80, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 10;
+        }
+
+        .mudada-h1 {
+            color: #F8FAFC;
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .texto1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .texto2 {
+            font-size: 1.2em;
+            font-weight: 500;
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin: 30px 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .container02 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            max-width: 600px;
+            margin: 20px auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        .conteudo {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            color: #F8FAFC;
+            font-size: 1.1em;
+            font-weight: 500;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .pagina {
+            margin-top: 70px;
+            text-align: center;
+            padding: 20px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        .scroll-container {
+            height: 400px;
+            overflow-y: auto;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Space Grotesk', sans-serif;
+            background: rgba(44, 62, 80, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            margin: 20px 0;
+            position: relative;
+            z-index: 10;
+        }
+
+        .scroll-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scroll-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .scroll-container::-webkit-scrollbar-thumb {
+            background: rgba(167, 197, 235, 0.6);
+            border-radius: 4px;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: rgba(248, 250, 252, 0.6);
+            font-style: italic;
+            font-size: 1.1em;
+        }
+
+        .filtro-input {
+            display: none;
+            margin: 10px 0 15px 0;
+        }
+
+        /* Estilos para a seleção de categorias de email */
+        .email-categories {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px auto;
+            flex-wrap: wrap;
+            max-width: 800px;
+        }
+
+        .category-button {
+            background: rgba(44, 62, 80, 0.5);
+            color: #F8FAFC;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-button:hover {
+            background: rgba(167, 197, 235, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .category-button.active {
+            background: linear-gradient(135deg, #A7C5EB, #A8D5BA);
+            color: #2C3E50;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(167, 197, 235, 0.3);
+        }
+
+        .category-count {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-size: 12px;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .category-button.active .category-count {
+            background: rgba(44, 62, 80, 0.3);
+        }
+
+        /* Estilos para informações detalhadas dos emails */
+        .email-details {
+            background: rgba(44, 62, 80, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 8px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .email-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .email-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .email-preview {
+            margin-top: 8px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            font-style: italic;
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Indicadores de status do email */
+        .email-status {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .status-unread {
+            background: rgba(255, 193, 7, 0.8);
+            color: #000;
+        }
+
+        .status-important {
+            background: rgba(255, 87, 34, 0.8);
+            color: #fff;
+        }
+
+        .status-starred {
+            background: rgba(255, 235, 59, 0.8);
+            color: #000;
+        }
+
+        .status-spam {
+            background: rgba(244, 67, 54, 0.8);
+            color: #fff;
+        }
+
+        /* Botão de acessibilidade */
+        .accessibility-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #A7C5EB 0%, #A8D5BA 100%);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(167, 197, 235, 0.4);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .accessibility-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(167, 197, 235, 0.6);
+        }
+
+        .hands-icon {
+            font-size: 1.5em;
+            color: #2C3E50;
+        }
+
+        .accessibility-popup {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 300px;
+            background: rgba(44, 62, 80, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px) scale(0.9);
+            transition: all 0.3s ease;
+            z-index: 999;
+            color: #F8FAFC;
+        }
+
+        .accessibility-popup.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .popup-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .popup-header h3 {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .popup-header .hands-icon {
+            font-size: 1.25em;
+            color: #A7C5EB;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .switch {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .switch::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+
+        .switch.active {
+            background: #A7C5EB;
+        }
+
+        .switch.active::before {
+            transform: translateX(26px);
+        }
+
+        .theme-labels {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+
+        .theme-icon {
+            font-size: 1em;
+        }
+
+        .font-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .font-button {
+            width: 36px;
+            height: 36px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: transparent;
+            color: inherit;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 1em;
+        }
+
+        .font-button:hover {
+            background: rgba(167, 197, 235, 0.2);
+            border-color: #A7C5EB;
+        }
+
+        .font-size-display {
+            min-width: 60px;
+            text-align: center;
+            font-weight: 600;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        /* Modo claro */
+        body.light-mode {
+            background: linear-gradient(180deg, 
+                #f8f9fa 0%, 
+                #e9ecef 20%, 
+                #dee2e6 35%, 
+                #ced4da 50%, 
+                #adb5bd 65%, 
+                #6c757d 80%, 
+                #495057 90%, 
+                #343a40 100%
+            );
+            color: #212529;
+        }
+
+        body.light-mode .accessibility-popup {
+            background: rgba(248, 249, 250, 0.95);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #212529;
+        }
+
+        body.light-mode .topo-quadrado {
+            background: rgba(248, 249, 250, 0.9);
+            color: #212529;
+        }
+
+        body.light-mode .login-section,
+        body.light-mode .loading-section,
+        body.light-mode .div1,
+        body.light-mode .div2,
+        body.light-mode .div3,
+        body.light-mode .div4,
+        body.light-mode .scroll-container {
+            background: rgba(248, 249, 250, 0.8);
+            color: #212529;
+        }
+
+        body.light-mode input[type="text"],
+        body.light-mode input[type="date"],
+        body.light-mode .selectchange,
+        body.light-mode .buttoneach {
+            background: rgba(248, 249, 250, 0.8);
+            color: #212529;
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode .switch {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        body.light-mode .switch::before {
+            background: #333;
+        }
+
+        body.light-mode .font-button {
+            border-color: rgba(0, 0, 0, 0.2);
+        }
+
+        body.light-mode .font-size-display {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                margin: 20px 15px;
+            }
+            
+            .email-categories {
+                flex-direction: column;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .category-button {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .accessibility-popup {
+                width: calc(100vw - 40px);
+                right: 20px;
+                left: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                margin: 15px 10px;
+                gap: 12px;
+            }
+            
+            .container02 {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .pagina {
+                padding: 15px 10px;
+            }
+            
+            .insiratexto-h1 {
+                font-size: 2.2em;
+                margin-top: 90px;
+            }
+
+            .texto1 {
+                font-size: 2em;
+            }
+
+            .topo-quadrado {
+                font-size: 1.6rem;
+                padding: 0 10px;
+                height: 60px;
+            }
+
+            .logout-btn {
+                font-size: 12px;
+                padding: 6px 12px;
+                right: 10px;
+            }
+
+            .pagina {
+                margin-top: 60px;
+            }
+
+            .accessibility-button {
+                width: 50px;
+                height: 50px;
+                bottom: 15px;
+                right: 15px;
+            }
+
+            .accessibility-popup {
+                bottom: 75px;
+                width: calc(100vw - 30px);
+                right: 15px;
+                left: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .pagina {
+                padding: 10px 8px;
+            }
+            
+            .login-section, .loading-section {
+                padding: 30px 20px;
+            }
+            
+            .div1, .div2, .div3, .div4 {
+                padding: 25px 20px;
+            }
+
+            .email-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+        }
+
+        .security-classification {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .content-pair {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin: 20px auto;
+            max-width: 1200px;
+            width: 100%;
+            opacity: 0; /* Inicialmente invisível */
+            transition: opacity 0.5s ease;
+        }
+
+        .content-pair.visible {
+            opacity: 1;
+        }
+
+        .content-pair.reverse {
+            flex-direction: row-reverse;
+        }
+
+        .eva-image {
+            width: 300px;
+            height: 300px;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+            display: none; /* Inicialmente oculto */
+        }
+
+        .eva-image.visible {
+            display: block;
+        }
+
+        .content-box {
+            flex: 1;
+            background: rgba(44, 62, 80, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 30px;
+            color: #F8FAFC;
+            transition: all 0.3s ease;
+        }
+
+        .content-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(167, 197, 235, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .content-pair {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .content-pair.reverse {
+                flex-direction: column;
+            }
+
+            .eva-image {
+                width: 100%;
+                max-width: 300px;
+                margin: 0 auto;
+            }
+        }
+
+        :root {
+    /* Existing variables... */
+    
+    /* Result-based colors - Enhanced emphasis */
+    --success-bg: rgba(168, 213, 186, 0.2);
+    --danger-bg: rgba(231, 76, 60, 0.2);
+    --success-highlight: rgba(168, 213, 186, 0.5);
+    --danger-highlight: rgba(231, 76, 60, 0.5);
+    --success-strong: #4CAF50;
+    --danger-strong: #F44336;
+}
+
+/* Trustworthy gradient animation */
+@keyframes trustworthyGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Malicious gradient animation */
+@keyframes maliciousGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Softer dynamic backgrounds for results */
+body.trustworthy {
+    background: linear-gradient(180deg, 
+        rgba(168, 213, 186, 0.3) 0%, 
+        rgba(129, 199, 132, 0.4) 20%, 
+        rgba(76, 175, 80, 0.3) 35%, 
+        #546E7A 50%, 
+        #455A64 65%, 
+        #37474F 80%, 
+        #2C3E50 90%, 
+        #1a1a2e 100%);
+    background-size: 400% 400%;
+    animation: trustworthyGradient 30s ease infinite;
+    background-attachment: fixed;
+}
+
+body.malicious {
+    background: linear-gradient(180deg, 
+        rgba(244, 67, 54, 0.3) 0%, 
+        rgba(229, 115, 115, 0.4) 20%, 
+        rgba(239, 154, 154, 0.3) 35%, 
+        #546E7A 50%, 
+        #455A64 65%, 
+        #37474F 80%, 
+        #2C3E50 90%, 
+        #1a1a2e 100%);
+    background-size: 400% 400%;
+    animation: maliciousGradient 30s ease infinite;
+    background-attachment: fixed;
+}
+
+/* Softer dynamic styling for results */
+.security-classification.trustworthy {
+    background: rgba(168, 213, 186, 0.8) !important;
+    color: #F8FAFC;
+    border: 2px solid rgba(76, 175, 80, 0.3);
+    box-shadow: 0 8px 30px rgba(76, 175, 80, 0.2);
+    transform: scale(1.03);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.security-classification.malicious {
+    background: rgba(229, 115, 115, 0.8) !important;
+    color: #F8FAFC;
+    border: 2px solid rgba(244, 67, 54, 0.3);
+    box-shadow: 0 8px 30px rgba(244, 67, 54, 0.2);
+    transform: scale(1.03);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+        /* Barra de Pesquisa */
+        .search-bar {
+            width: 100%;
+            max-width: 500px;
+            padding: 18px 28px;
+            margin: 25px auto 10px;
+            border-radius: 999px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            background: rgba(44, 62, 80, 0.35);
+            color: #F8FAFC;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 18px;
+            font-weight: 500;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+        }
+
+        .search-bar::placeholder {
+            color: rgba(248, 250, 252, 0.6);
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: #A7C5EB;
+            box-shadow: 0 0 0 4px rgba(167, 197, 235, 0.2);
+            background: rgba(44, 62, 80, 0.55);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="topo-quadrado">
+        Evita
+        {% if oauth_authenticated and emails_carregados %}
+            <a href="{{ url_for('logout') }}" class="logout-btn">🚪 Logout</a>
+        {% endif %}
+    </div>
+    
+    <a href="/info" class="botao-voltar" aria-label="Voltar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+    </a>
+    
+    <div class="pagina">
+        <!-- Mensagens flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Seção de Login -->
+        {% if not oauth_authenticated %}
+            <div class="login-section">
+                <h2 class="estilo-h1">🔐 Acesso aos Emails</h2>
+                <p style="margin: 20px 0; font-size: 1.1em; opacity: 0.9;">
+                    Para analisar seus emails, faça login com sua conta Google.
+                </p>
+                
+                {% if oauth_error %}
+                    <div class="alert alert-error">
+                        {{ oauth_error }}
+                    </div>
+                {% endif %}
+                
+                <a href="{{ url_for('logingoogle') }}" class="login-button">
+                    🔑 Fazer Login com Google
+                </a>
+                <p style="font-size: 14px; opacity: 0.7; margin-top: 15px;">
+                    Seu login será sempre solicitado para garantir máxima segurança
+                </p>
+            </div>
+        {% endif %}
+
+        <!-- NOVA Seção de Loading -->
+        {% if oauth_authenticated and not emails_carregados %}
+            <div class="loading-section">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
+                <h2>🔄 Carregando seus E-mails</h2>
+                <p>Aguarde enquanto processamos seus dados da categoria <strong>{{ categoria_atual }}</strong>...</p>
+                
+                <div class="loading-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <p class="progress-text" id="progressText">Conectando ao Gmail...</p>
+                </div>
+                
+                <div class="progress-steps">
+                    <div class="step active">✓ Conectado ao Gmail</div>
+                    <div class="step loading" id="step2">🔄 Carregando categorias</div>
+                    <div class="step" id="step3">📊 Organizando dados</div>
+                    <div class="step" id="step4">✅ Concluído</div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Seção de Filtros -->
+        {% if oauth_authenticated and emails_carregados %}
+            <div>
+                <h1 class="insiratexto-h1">Pesquise nos seus Emails</h1>
+
+                <!-- Seleção de Categorias de Email -->
+                <div class="email-categories">
+                    {% if email_categories %}
+                        {% for category_id, category_info in email_categories.items() %}
+                            <form method="POST" action="{{ url_for('mudar_categoria') }}" style="display: inline;">
+                                <input type="hidden" name="categoria" value="{{ category_id }}">
+                                <button type="submit" class="category-button {% if categoria_atual == category_id %}active{% endif %}">
+                                    {% if category_id == 'INBOX' %}📥{% elif category_id == 'SPAM' %}🚫{% elif category_id == 'IMPORTANT' %}⭐{% elif category_id == 'STARRED' %}🌟{% else %}📁{% endif %}
+                                    {{ category_info.nome }}
+                                    <span class="category-count">{{ category_info.count }}</span>
+                                </button>
+                            </form>
+                        {% endfor %}
+                    {% else %}
+                        <button class="category-button active">📥 Caixa de Entrada</button>
+                        <button class="category-button" disabled>🚫 Spam</button>
+                        <button class="category-button" disabled>⭐ Importantes</button>
+                        <button class="category-button" disabled>🌟 Com Estrela</button>
+                    {% endif %}
+                </div>
+
+                <!-- Barra de Pesquisa -->
+                <input id="searchInput" class="search-bar" type="text" placeholder="Pesquisar por autor, assunto ou conteúdo..." autocomplete="off" />
+            </div>
+        {% endif %}
+
+        <!-- Seção de Emails -->
+        {% if oauth_authenticated and emails_carregados %}
+            <div class="div4">
+                <h1 class="mudada-h1">
+                    Lista de Emails
+                    {% if categoria_atual and email_categories and categoria_atual in email_categories %}
+                        - {{ email_categories[categoria_atual].nome }}
+                    {% endif %}
+                </h1>
+                
+                {% if emails_totais %}
+                    <div class="scroll-container">
+                        {% for email in emails_totais %}
+                            <form method="POST" action="{{ url_for('analisaremail') }}">
+                                <!-- CORREÇÃO PRINCIPAL: Envia tanto email_id quanto email_especifico -->
+                                <input type="hidden" name="email_id" value="{{ email.id if email.id else '' }}">
+                                <input type="hidden" name="email_especifico" value="{{ email.preview if email.preview else (email.texto_simples if email.texto_simples else email.corpo) }}">
+                                <input type="hidden" name="assunto_email_especifico" value="{{ email.assunto }}">
+                                <button type="submit" class="buttoneach" onclick="showAnalysisLoading(event)">
+                                    <strong>{{ email.assunto }}</strong>
+                                    
+                                    <!-- Status badges -->
+                                    <div class="email-status">
+                                        {% if email.is_unread %}
+                                            <span class="status-badge status-unread">NOVO</span>
+                                        {% endif %}
+                                        {% if email.is_important %}
+                                            <span class="status-badge status-important">IMPORTANTE</span>
+                                        {% endif %}
+                                        {% if email.is_starred %}
+                                            <span class="status-badge status-starred">ESTRELA</span>
+                                        {% endif %}
+                                        {% if email.is_spam %}
+                                            <span class="status-badge status-spam">SPAM</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Informações básicas -->
+                                    <div class="email-details">
+                                        <div class="email-meta">
+                                            <div class="email-meta-item">
+                                                <span>👤</span>
+                                                <span>{{ email.remetente_email if email.remetente_email else email.remetente }}</span>
+                                            </div>
+                                            <div class="email-meta-item">
+                                                <span>📅</span>
+                                                <span>{{ email.data_formatada if email.data_formatada else email.data }}</span>
+                                            </div>
+                                            {% if email.total_links and email.total_links > 0 %}
+                                                <div class="email-meta-item">
+                                                    <span>🔗</span>
+                                                    <span>{{ email.total_links }} link(s)</span>
+                                                </div>
+                                            {% endif %}
+                                            {% if email.total_anexos and email.total_anexos > 0 %}
+                                                <div class="email-meta-item">
+                                                    <span>📎</span>
+                                                    <span>{{ email.total_anexos }} anexo(s)</span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Preview do conteúdo -->
+                                        {% if email.preview %}
+                                            <div class="email-preview">
+                                                {{ email.preview[:150] }}{% if email.preview|length > 150 %}...{% endif %}
+                                            </div>
+                                        {% elif email.texto_simples %}
+                                            <div class="email-preview">
+                                                {{ email.texto_simples[:150] }}{% if email.texto_simples|length > 150 %}...{% endif %}
+                                            </div>
+                                        {% elif email.corpo %}
+                                            <div class="email-preview">
+                                                {{ email.corpo[:150] }}{% if email.corpo|length > 150 %}...{% endif %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </button>
+                            </form>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        {% if categoria_atual == 'SPAM' %}
+                            Não há emails na pasta de spam
+                        {% elif categoria_atual == 'IMPORTANT' %}
+                            Não há emails importantes
+                        {% elif categoria_atual == 'STARRED' %}
+                            Não há emails com estrela
+                        {% else %}
+                            Não há emails nessa categoria
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Seção de Análise -->
+        {% if oauth_authenticated and emails_carregados %}
+            <div class="container">
+                <!-- Classificação de Segurança no topo -->
+                <div class="security-classification" style="background-color: {{ coloracao }};">
+                    <div class="card-icon">🔍</div>
+                    <div class="conteudo">
+                        <div>
+                            <div class="texto1">{{ classificacao02 }}</div>
+                            <div class="texto2">Classificação de Segurança</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Remetente -->
+                <div class="content-pair">
+                    <img src="{{ url_for('static', filename=random_eva_images[0]) }}" alt="Eva Image" class="eva-image">
+                    <div class="content-box">
+                        <div class="conteudo">
+                            <div>
+                                <div class="texto1">Remetente</div>
+                                <div class="texto2">{{ dominio02 }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assunto -->
+                <div class="content-pair reverse">
+                    <img src="{{ url_for('static', filename=random_eva_images[1]) }}" alt="Eva Image" class="eva-image">
+                    <div class="content-box">
+                        <div class="conteudo">
+                            <div>
+                                <div class="texto1">Assunto</div>
+                                <div class="texto2">{{ assuntoemail }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Análise -->
+                <div class="content-pair">
+                    <img src="{{ url_for('static', filename=random_eva_images[2]) }}" alt="Eva Image" class="eva-image">
+                    <div class="content-box">
+                        <div class="conteudo">
+                            <div>
+                                <div class="texto1">Análise</div>
+                                <div class="texto2">{{ justificativa02 }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recomendações -->
+                <div class="content-pair reverse">
+                    <img src="{{ url_for('static', filename=random_eva_images[3]) }}" alt="Eva Image" class="eva-image">
+                    <div class="content-box">
+                        <div class="conteudo">
+                            <div>
+                                <div class="texto1">Recomendações</div>
+                                <div class="texto2">{{ seguranca02 }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Botão de Acessibilidade -->
+    <button class="accessibility-button" onclick="toggleAccessibility()" aria-label="Opções de Acessibilidade">
+        <span class="hands-icon">🤲</span>
+    </button>
+
+    <!-- Popup de Acessibilidade -->
+    <div class="accessibility-popup" id="accessibilityPopup">
+        <div class="popup-header">
+            <span class="hands-icon">🤝</span>
+            <h3>Acessibilidade</h3>
+        </div>
+        
+        <div class="control-group">
+            <label class="control-label">Tema</label>
+            <div class="theme-toggle">
+                <div class="theme-labels">
+                    <span class="theme-icon">🌙</span>
+                    <span>Escuro</span>
+                </div>
+                <div class="switch" id="themeSwitch" onclick="toggleTheme()"></div>
+                <div class="theme-labels">
+                    <span>Claro</span>
+                    <span class="theme-icon">☀️</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label class="control-label">Tamanho da Fonte</label>
+            <div class="font-controls">
+                <button class="font-button" onclick="changeFontSize(-0.1)" aria-label="Diminuir fonte">A-</button>
+                <div class="font-size-display" id="fontSizeDisplay">100%</div>
+                <button class="font-button" onclick="changeFontSize(0.1)" aria-label="Aumentar fonte">A+</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        // Função para mostrar/ocultar inputs de filtro
+        function mostrarInput(valor) {
+            // Esconde todos os inputs
+            document.getElementById('input-data').style.display = 'none';
+            document.getElementById('input-autor').style.display = 'none';
+            
+            // Mostra o input correspondente
+            if (valor === 'data') {
+                document.getElementById('input-data').style.display = 'block';
+            } else if (valor === 'autor') {
+                document.getElementById('input-autor').style.display = 'block';
+            }
+        }
+
+        // NOVA FUNÇÃO: Processamento automático de emails após OAuth
+        function processEmailsAutomatically() {
+            const isAuthenticated = {{ 'true' if oauth_authenticated else 'false' }};
+            const emailsCarregados = {{ 'true' if emails_carregados else 'false' }};
+            
+            if (isAuthenticated && !emailsCarregados) {
+                console.log('🔄 Iniciando processamento automático de emails...');
+                
+                // Atualiza mensagens de progresso
+                updateProgressMessages();
+                
+                // Chama a API para processar emails
+                setTimeout(() => {
+                    fetch('/process_emails_ajax')
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('✅ Processamento concluído:', data);
+                            
+                            if (data.status === 'success') {
+                                // Atualiza último step
+                                const step4 = document.getElementById('step4');
+                                if (step4) {
+                                    step4.classList.add('active');
+                                    step4.classList.remove('loading');
+                                }
+                                
+                                // Redireciona após sucesso
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 1500);
+                            } else {
+                                console.error('❌ Erro no processamento:', data.message);
+                                alert('Erro ao carregar emails: ' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('💥 Erro na requisição:', error);
+                            alert('Erro de conexão. Tente recarregar a página.');
+                        });
+                }, 2000); // Aguarda 2 segundos para mostrar o loading
+            }
+        }
+
+        // NOVA FUNÇÃO: Atualiza mensagens de progresso
+        function updateProgressMessages() {
+            const progressText = document.getElementById('progressText');
+            const step2 = document.getElementById('step2');
+            const step3 = document.getElementById('step3');
+            
+            if (!progressText) return;
+            
+            const messages = [
+                'Conectando ao Gmail...',
+                'Buscando categorias...',
+                'Carregando emails...',
+                'Organizando dados...',
+                'Finalizando...'
+            ];
+            
+            let currentIndex = 0;
+            const interval = setInterval(() => {
+                if (progressText && currentIndex < messages.length) {
+                    progressText.textContent = messages[currentIndex];
+                    
+                    // Atualiza steps
+                    if (currentIndex === 2 && step2) {
+                        step2.classList.add('active');
+                        step2.classList.remove('loading');
+                    }
+                    if (currentIndex === 3 && step3) {
+                        step3.classList.add('active');
+                        step3.classList.add('loading');
+                    }
+                    
+                    currentIndex++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 1000);
+        }
+
+        // NOVA FUNÇÃO: Feedback visual para análise de email
+        function showAnalysisLoading(event) {
+            const button = event.target.closest('button');
+            const originalHTML = button.innerHTML;
+            
+            // CORREÇÃO: Permite o submit primeiro, depois mostra loading APÓS o submit
+            setTimeout(() => {
+                // Desabilita o botão e mostra loading APÓS o submit
+                button.disabled = true;
+                button.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <div style="width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid #fff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                        <span>Analisando email...</span>
+                    </div>
+                `;
+                
+                // Restaura após timeout (fallback)
+                setTimeout(() => {
+                    button.disabled = false;
+                    button.innerHTML = originalHTML;
+                }, 15000);
+            }, 100); // Aguarda 100ms para o submit acontecer primeiro
+            
+            // NÃO previne o evento - deixa o formulário ser submetido
+            return true;
+        }
+
+        // Inicializar quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Aplica imediatamente as configurações de acessibilidade salvas
+            loadAccessibilitySettings();
+
+            const filtroSelect = document.getElementById('filtro');
+            
+            // Verifica se há filtros aplicados e mostra o input correspondente
+            {% if filtros %}
+                {% if filtros.data %}
+                    if (filtroSelect) {
+                        filtroSelect.value = 'data';
+                        mostrarInput('data');
+                    }
+                {% elif filtros.autor %}
+                    if (filtroSelect) {
+                        filtroSelect.value = 'autor';
+                        mostrarInput('autor');
+                    }
+                {% endif %}
+            {% endif %}
+            
+            // NOVO: Inicia processamento automático se necessário
+            processEmailsAutomatically();
+        });
+
+        // Funcionalidades de Acessibilidade
+        let currentFontSize = 0;
+        let isLightMode = false;
+        let accessibilityVisible = false;
+
+        function toggleAccessibility() {
+            const popup = document.getElementById('accessibilityPopup');
+            accessibilityVisible = !accessibilityVisible;
+            
+            if (accessibilityVisible) {
+                popup.classList.add('show');
+            } else {
+                popup.classList.remove('show');
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeSwitch = document.getElementById('themeSwitch');
+            
+            isLightMode = !isLightMode;
+            
+            if (isLightMode) {
+                body.classList.add('light-mode');
+                themeSwitch.classList.add('active');
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.classList.remove('light-mode');
+                themeSwitch.classList.remove('active');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        function changeFontSize(delta) {
+            currentFontSize += delta;
+            currentFontSize = Math.max(0.8, Math.min(1.5, currentFontSize));
+            
+            document.body.style.fontSize = currentFontSize + 'rem';
+            document.getElementById('fontSizeDisplay').textContent = Math.round(currentFontSize * 100) + '%';
+            
+            localStorage.setItem('fontSize', currentFontSize);
+        }
+
+        // Carregar preferências salvas
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carregar tema
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                isLightMode = true;
+                document.body.classList.add('light-mode');
+                const themeSwitch = document.getElementById('themeSwitch');
+                if (themeSwitch) themeSwitch.classList.add('active');
+            }
+            
+            // Carregar tamanho da fonte
+            const savedFontSize = localStorage.getItem('fontSize');
+            if (savedFontSize) {
+                currentFontSize = parseFloat(savedFontSize);
+                document.body.style.fontSize = currentFontSize + 'rem';
+                const fontDisplay = document.getElementById('fontSizeDisplay');
+                if (fontDisplay) fontDisplay.textContent = Math.round(currentFontSize * 100) + '%';
+            }
+        });
+
+        // Fechar popup ao clicar fora
+        document.addEventListener('click', function(event) {
+            const popup = document.getElementById('accessibilityPopup');
+            const button = document.querySelector('.accessibility-button');
+            
+            if (accessibilityVisible && popup && button && !popup.contains(event.target) && !button.contains(event.target)) {
+                popup.classList.remove('show');
+                accessibilityVisible = false;
+            }
+        });
+
+        // Atalhos de teclado para acessibilidade
+        document.addEventListener('keydown', function(event) {
+            // Alt + A para abrir acessibilidade
+            if (event.altKey && event.key === 'a') {
+                event.preventDefault();
+                toggleAccessibility();
+            }
+            
+            // Alt + T para alternar tema
+            if (event.altKey && event.key === 't') {
+                event.preventDefault();
+                toggleTheme();
+            }
+            
+            // Alt + + para aumentar fonte
+            if (event.altKey && event.key === '+') {
+                event.preventDefault();
+                changeFontSize(0.1);
+            }
+            
+            // Alt + - para diminuir fonte
+            if (event.altKey && event.key === '-') {
+                event.preventDefault();
+                changeFontSize(-0.1);
+            }
+        });
+
+        function showAnalysisContent() {
+            // Mostra os pares de conteúdo com fade
+            const contentPairs = document.querySelectorAll('.content-pair');
+            contentPairs.forEach((pair, index) => {
+                setTimeout(() => {
+                    pair.classList.add('visible');
+                    const image = pair.querySelector('.eva-image');
+                    if (image) image.classList.add('visible');
+                }, index * 200); // Delay sequencial para cada par
+            });
+        }
+
+        // Chama a função quando houver conteúdo de análise
+        {% if justificativa02 and dominio02 and assuntoemail and seguranca02 %}
+            document.addEventListener('DOMContentLoaded', showAnalysisContent);
+        {% endif %}
+
+// Apply styling based on classification result
+function applyResultStyling(classification) {
+    const body = document.body;
+    const resultDiv = document.querySelector('.security-classification');
+    
+    if (classification && (classification.toLowerCase().includes('malicioso') || classification.toLowerCase().includes('malicious'))) {
+        body.classList.add('malicious');
+        body.classList.remove('trustworthy');
+        if (resultDiv) resultDiv.classList.add('malicious');
+    } else if (classification && (classification.toLowerCase().includes('confiável') || classification.toLowerCase().includes('trustworthy') || classification.toLowerCase().includes('confiavel'))) {
+        body.classList.add('trustworthy');
+        body.classList.remove('malicious');
+        if (resultDiv) resultDiv.classList.add('trustworthy');
+    }
+}
+
+        // Função para salvar configurações
+        function saveAccessibilitySettings() {
+            const settings = {
+                fontSize: currentFontSize,
+                isLightMode: isLightMode
+            };
+            
+            fetch('/save_accessibility_settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(settings)
+            })
+            .then(response => response.json())
+            .catch(error => console.error('Erro ao salvar configurações:', error));
+        }
+
+        // Função para carregar configurações
+        function loadAccessibilitySettings() {
+            fetch('/get_accessibility_settings')
+            .then(response => response.json())
+            .then(settings => {
+                currentFontSize = settings.fontSize;
+                isLightMode = settings.isLightMode;
+                
+                // Aplica as configurações
+                updateFontSize();
+                updateFontSizeDisplay();
+                
+                // Aplica o tema
+                const body = document.body;
+                const themeSwitch = document.getElementById('themeSwitch');
+                
+                if (isLightMode) {
+                    body.classList.add('light-mode');
+                    themeSwitch.classList.add('active');
+                } else {
+                    body.classList.remove('light-mode');
+                    themeSwitch.classList.remove('active');
+                }
+            })
+            .catch(error => console.error('Erro ao carregar configurações:', error));
+        }
+
+        function toggleAccessibilityPopup() {
+            const popup = document.getElementById('accessibilityPopup');
+            popup.classList.toggle('show');
+        }
+
+        document.addEventListener('click', function(event) {
+            const popup = document.getElementById('accessibilityPopup');
+            const button = document.querySelector('.accessibility-button');
+            
+            if (!popup.contains(event.target) && !button.contains(event.target)) {
+                popup.classList.remove('show');
+            }
+        });
+
+        function toggleTheme() {
+            isLightMode = !isLightMode;
+            const body = document.body;
+            const themeSwitch = document.getElementById('themeSwitch');
+            
+            if (isLightMode) {
+                body.classList.add('light-mode');
+                themeSwitch.classList.add('active');
+            } else {
+                body.classList.remove('light-mode');
+                themeSwitch.classList.remove('active');
+            }
+            
+            // Salva as configurações quando o tema é alterado
+            saveAccessibilitySettings();
+        }
+
+        function changeFontSize(change) {
+            const newSize = currentFontSize + change;
+            
+            if (newSize >= -5 && newSize <= 5) {
+                currentFontSize = newSize;
+                updateFontSize();
+                updateFontSizeDisplay();
+                
+                // Salva as configurações quando o tamanho da fonte é alterado
+                saveAccessibilitySettings();
+            }
+        }
+
+        function updateFontSize() {
+            const body = document.body;
+            
+            // Calcular nova escala de fonte (cada nível = 5% de mudança)
+            const scale = 1 + (currentFontSize * 0.05);
+            
+            // Aplicar ao body (afeta TODA a página)
+            body.style.fontSize = `${scale}rem`;
+        }
+
+        function updateFontSizeDisplay() {
+            const display = document.getElementById('fontSizeDisplay');
+            display.textContent = currentFontSize > 0 ? `+${currentFontSize}` : currentFontSize.toString();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAccessibilitySettings();
+            
+    // Apply result styling if classification exists
+    const classification = '{{ classificacao02 }}';
+    if (classification) {
+        applyResultStyling(classification);
+    }
+            updateFontSizeDisplay();
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.altKey && event.code === 'KeyA') {
+                event.preventDefault();
+                toggleAccessibilityPopup();
+            }
+            
+            if (event.altKey && event.code === 'KeyT') {
+                event.preventDefault();
+                toggleTheme();
+            }
+            
+            if (event.altKey && (event.code === 'Equal' || event.code === 'NumpadAdd')) {
+                event.preventDefault();
+                changeFontSize(1);
+            }
+            
+            if (event.altKey && (event.code === 'Minus' || event.code === 'NumpadSubtract')) {
+                event.preventDefault();
+                changeFontSize(-1);
+            }
+        });
+
+        // Função de filtragem dinâmica dos emails
+        function filtrarEmails(query) {
+            query = query.toLowerCase();
+            const emailButtons = document.querySelectorAll('.buttoneach');
+            emailButtons.forEach(btn => {
+                const texto = btn.textContent.toLowerCase();
+                if (texto.includes(query)) {
+                    btn.parentElement.style.display = '';
+                } else {
+                    btn.parentElement.style.display = 'none';
+                }
+            });
+        }
+
+        // Listener para busca dinâmica
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                filtrarEmails(e.target.value);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+"DO OBJETO
+A Plataforma Evita é uma ferramenta de tecnologia baseada em inteligência artificial que tem como objetivo auxiliar os Usuários na prevenção contra golpes e fraudes no ambiente digital. O serviço consiste na análise de URLs (links) e e-mails submetidos pelo Usuário, fornecendo uma classificação de risco e relatórios informativos sobre a potencial confiabilidade ou não do conteúdo analisado. A Evita atua como uma ferramenta de auxílio informativo e não substitui a necessidade de um software de antivírus ou de outras medidas de segurança digital.
+
+DA ACEITAÇÃO
+A aceitação destes Termos é indispensável para a utilização da Plataforma. A concordância se dará de forma tácita e eletrônica no momento em que o Usuário criar sua conta por meio do login social do Google ou, ainda, pelo simples acesso e uso de qualquer funcionalidade da Plataforma, mesmo que de forma gratuita. Ao realizar o cadastro ou utilizar os serviços, o Usuário declara ter lido, entendido e concordado integralmente com todas as cláusulas aqui dispostas, bem como com a Política de Privacidade, que é parte integrante deste documento. Caso não concorde com qualquer disposição, o Usuário não deverá utilizar a Plataforma.
+
+DO CADASTRO E DA CONTA DE USUÁRIO
+O acesso às funcionalidades da Plataforma exige um cadastro prévio, realizado por meio da vinculação da conta Google do Usuário. Ao se cadastrar, o Usuário concorda em fornecer informações verdadeiras e autoriza a coleta de dados básicos de seu perfil, como nome e endereço de e-mail. Embora o serviço possa ser acessado por qualquer pessoa, ele é destinado a indivíduos maiores de 18 (dezoito) anos ou com plena capacidade civil. Usuários menores de 18 anos deverão estar assistidos por seus pais ou responsáveis legais, que serão integralmente responsáveis por todos os atos praticados pelo menor na utilização da Plataforma. O Usuário é o único responsável pela segurança de sua conta e por todas as atividades nela realizadas.
+
+DOS PLANOS DE SERVIÇO
+A Evita oferece o serviço de forma gratuita para pessoas físicas e pessoas jurídicas. A ferramenta é voltada para uso pessoal e não comercial.
+
+DAS REGRAS DE USO DA PLATAFORMA
+Ao utilizar a Evita, o Usuário se compromete a não utilizar a Plataforma para fins ilícitos, comerciais ou que violem estes Termos. É vedado ao Usuário tentar realizar engenharia reversa, descompilar ou desmontar qualquer parte do software; utilizar robôs ou outros meios automatizados para acessar a Plataforma e sobrecarregar sua infraestrutura; submeter conteúdo que contenha vírus ou códigos maliciosos; e usar as informações e relatórios gerados para difamar, assediar ou prejudicar terceiros. A violação destas regras poderá resultar na suspensão ou cancelamento imediato da conta, sem prejuízo das medidas legais cabíveis.
+
+DA PROPRIEDADE INTELECTUAL
+Todos os direitos de propriedade intelectual relativos à Plataforma, incluindo, mas não se limitando a, marcas, patentes, software, layouts, logotipos, relatórios, algoritmos e o modelo de inteligência artificial, são de titularidade exclusiva da Evita. Estes Termos concedem ao Usuário uma licença de uso pessoal, limitada, não exclusiva, intransferível e revogável para acessar e utilizar a Plataforma. Esta licença não confere ao Usuário qualquer direito de propriedade ou titularidade sobre os ativos intelectuais da Evita.
+
+DA LICENÇA DE USO DO CONTEÚDO DO USUÁRIO
+Para a prestação do serviço, o Usuário submete à Plataforma conteúdos como URLs e e-mails para análise. Ao fazer isso, o Usuário concede à Evita uma licença mundial, perpétua, irrevogável, isenta de royalties e transferível para usar, processar e analisar a partir deste conteúdo com a finalidade de prestar o serviço solicitado. O conteúdo dos e-mails e dos URLs nunca serão arquivados.
+
+DA PRIVACIDADE E PROTEÇÃO DE DADOS
+A Evita está comprometida com a proteção da privacidade e dos dados pessoais de seus Usuários. A coleta e o tratamento de dados, incluindo nome, e-mail e o conteúdo analisado, são regidos por uma Política de Privacidade específica, que constitui parte inseparável destes Termos. O Usuário deve ler atentamente a Política de Privacidade para compreender como seus dados são utilizados e protegidos.
+
+DAS LIMITAÇÕES DE RESPONSABILIDADE E ISENÇÃO DE GARANTIAS
+A Evita é uma ferramenta de apoio que funciona por meio da análise de contextos e da comparação de dados de forma automatizada. Ela não é um antivírus e não realiza uma varredura profunda de dados ("scrapping"). O Usuário reconhece e concorda que a Plataforma não garante a segurança absoluta e não exclui a possibilidade de ocorrência de "falsos positivos" (conteúdo seguro classificado como malicioso) ou "falsos negativos" (conteúdo malicioso classificado como seguro). A Plataforma sempre busca deixar claras as incertezas e instruir o usuário sobre medidas de segurança adicionais. Em cenários com pouca informação disponível sobre um determinado e-mail ou URL, o sistema pode adotar uma abordagem cautelosa e classificá-lo como malicioso por precaução, mesmo que não apresente ameaças reais. Desta forma, o Usuário isenta a Evita de qualquer responsabilidade por danos diretos ou indiretos, incluindo perdas financeiras, roubo de dados ou qualquer outro prejuízo decorrente de decisões tomadas com base nos relatórios e análises fornecidos. O serviço é oferecido "no estado em que se encontra" ("as is"), sem quaisquer garantias expressas ou implícitas de infalibilidade.
+
+DA SUSPENSÃO E CANCELAMENTO DA CONTA
+O Usuário pode solicitar o cancelamento de sua conta a qualquer momento, por meio dos canais de suporte da Plataforma. A Evita reserva-se o direito de suspender ou cancelar, a qualquer tempo e sem aviso prévio, o acesso de qualquer Usuário que violar estes Termos, praticar atos fraudulentos ou utilizar a Plataforma para fins ilícitos.
+
+DAS ALTERAÇÕES NOS TERMOS DE USO
+A Evita poderá alterar estes Termos a qualquer momento para refletir melhorias no serviço ou mudanças na legislação. Quando as alterações forem significativas, o Usuário será notificado por e-mail ou por um aviso em destaque na Plataforma. A continuidade do uso da Plataforma após a notificação constituirá aceitação tácita das novas condições.
+
+DAS DISPOSIÇÕES GERAIS
+Estes Termos constituem o acordo integral entre o Usuário e a Evita. Se qualquer cláusula for considerada nula ou ineficaz, as demais permanecerão válidas e em pleno vigor. A falha da Evita em exercer qualquer direito previsto nestes Termos não será considerada uma renúncia a esse direito. Todas as comunicações oficiais deverão ser feitas através dos canais de suporte indicados na Plataforma.
+
+DO FORO
+Para dirimir quaisquer controvérsias oriundas destes Termos de Uso, as partes elegem o foro da Comarca de Goiânia, no Estado de Goiás, renunciando a qualquer outro, por mais privilegiado que seja."

@@ -1,0 +1,16 @@
+openai
+flask
+tqdm
+google-auth-oauthlib
+google-api-python-client
+gunicorn
+flask-cors
+requests
+urllib3
+google-auth
+requests-oauthlib
+pytesseract
+Pillow
+Flask-Session
+redis
+bs4
